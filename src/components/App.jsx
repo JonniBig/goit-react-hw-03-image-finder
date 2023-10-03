@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 import CSS from './App.module.scss';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
@@ -7,9 +6,7 @@ import { ImageGalleryItem } from './ImageGalleryItem/ImageGalleryItem';
 import { Loader } from './Loader/Loader';
 import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
-
-const BASE_URL = 'https://pixabay.com/api/';
-const API_KEY = '38920750-ce35b8fd2527c3f11d87386ea';
+import { fetchImages } from './services/getImages';
 
 export class App extends Component {
   state = {
@@ -40,17 +37,7 @@ export class App extends Component {
     const { query, page } = this.state;
 
     try {
-      const response = await axios.get(BASE_URL, {
-        params: {
-          q: query,
-          page: page,
-          key: API_KEY,
-          image_type: 'photo',
-          orientation: 'horizontal',
-          per_page: 12,
-        },
-      });
-      const newImages = response.data.hits;
+      const newImages = await fetchImages(query, page);
       this.setState(prevState => ({
         images: [...prevState.images, ...newImages],
         page: prevState.page + 1,

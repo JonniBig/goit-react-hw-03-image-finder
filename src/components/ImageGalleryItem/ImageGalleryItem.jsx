@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import CSS from '../App.module.scss';
+import CSS from './ImageGalleryItem.module.scss';
 
 export class ImageGalleryItem extends Component {
   render() {

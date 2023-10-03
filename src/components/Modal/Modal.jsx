@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import CSS from '../App.module.scss';
+import CSS from './Modal.module.scss';
 export class Modal extends Component {
   componentDidMount() {
     window.addEventListener('keydown', this.onEscapeKey);
