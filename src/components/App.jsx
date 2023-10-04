@@ -6,7 +6,7 @@ import { ImageGalleryItem } from './ImageGalleryItem/ImageGalleryItem';
 import { Loader } from './Loader/Loader';
 import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
-import { fetchImages } from './services/getImages';
+import { fetchImages } from '../services/getImages';
 
 export class App extends Component {
   state = {
@@ -17,7 +17,17 @@ export class App extends Component {
     error: null,
     isModalOpen: false,
     selectedImageURL: '',
+    totalHits: 0,
   };
+
+  componentDidUpdate(_, prevState) {
+    if (
+      this.state.query !== prevState.query ||
+      this.state.page !== prevState.page
+    ) {
+      this.loadImages();
+    }
+  }
 
   handleSearchSubmit = query => {
     if (!query.trim()) {
@@ -25,22 +35,22 @@ export class App extends Component {
       return;
     }
 
-    this.setState(
-      { query, images: [], page: 1, isLoading: true, error: null },
-      () => {
-        this.loadImages();
-      }
-    );
+    this.setState({ query, images: [], page: 1, isLoading: true, error: null });
   };
 
   loadImages = async () => {
     const { query, page } = this.state;
 
     try {
-      const newImages = await fetchImages(query, page);
+      const data = await fetchImages(query, page);
+
+      if (data.hits.length === 0) {
+        return;
+      }
+
       this.setState(prevState => ({
-        images: [...prevState.images, ...newImages],
-        page: prevState.page + 1,
+        images: [...prevState.images, ...data.hits],
+        totalHits: data.totalHits,
       }));
     } catch (error) {
       this.setState({ error });
@@ -51,7 +61,9 @@ export class App extends Component {
   };
 
   loadMoreImages = () => {
-    this.loadImages();
+    this.setState(prevState => ({
+      page: prevState.page + 1,
+    }));
   };
 
   openModal = imageURL => {
@@ -85,9 +97,11 @@ export class App extends Component {
           ))}
         </ImageGallery>
         {isLoading ? <Loader /> : null}
-        {images.length > 0 && !isLoading && (
-          <Button onClick={this.loadMoreImages} />
-        )}
+        {images.length > 0 &&
+          !isLoading &&
+          this.state.page < Math.ceil(this.state.totalHits / 12) && (
+            <Button onClick={this.loadMoreImages} />
+          )}
         {error && <p className={CSS.Error}>Error loading images.</p>}
         {isModalOpen && (
           <Modal
